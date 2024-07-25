@@ -9,5 +9,6 @@ namespace Entities.Concrete
         [NotMapped]
         public string password { get; set; }
         public string? MACADDRESS { get; set; }
+        public string? role { get; set; }
     }
 }

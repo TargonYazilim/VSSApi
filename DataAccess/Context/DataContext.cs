@@ -27,6 +27,7 @@ namespace DataAccess.Context
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();
                 entity.Property(e => e.username).HasMaxLength(50).HasColumnName("username");
                 entity.Property(e => e.MACADDRESS).HasMaxLength(64).HasColumnName("MACADDRESS");
+                entity.Property(e => e.role).HasMaxLength(64).HasColumnName("role");
             });
         }
 

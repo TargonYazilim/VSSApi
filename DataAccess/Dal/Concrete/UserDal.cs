@@ -5,6 +5,7 @@ using Entities;
 using Entities.Concrete;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Shared.Models.Login;
 using System.Data;
 using System.Text.Json;
 
@@ -32,17 +33,11 @@ namespace DataAccess.Dal.Concrete
             using (DataContext _context = new DataContext())
             {
                 return await _context.Set<User>()
-                    .Where(x => x.username == username).Select(item => new User()
-                    {
-                        Id = item.Id,
-                        username = item.username,
-                        MACADDRESS = item.MACADDRESS,
-                        CreateDate = item.CreateDate,
-                    }).FirstOrDefaultAsync();
+                    .Where(x => x.username == username).FirstOrDefaultAsync();
             }
         }
 
-        public async Task<BaseResult?> Login(User user)
+        public async Task<LoginResult?> Login(User user)
         {
 
             using (DataContext _context = new DataContext())
@@ -64,7 +59,7 @@ namespace DataAccess.Dal.Concrete
                 if (await reader.ReadAsync())
                 {
                     var resultJson = reader.GetString(0);
-                    return JsonSerializer.Deserialize<BaseResult>(resultJson);
+                    return JsonSerializer.Deserialize<LoginResult>(resultJson);
                 }
                 return null;
             }

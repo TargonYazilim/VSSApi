@@ -1,5 +1,6 @@
-﻿using Entities;
+﻿
 using Entities.Dtos;
+using Shared.Models.Login;
 
 namespace Business.Services.Abstract
 {
@@ -10,7 +11,7 @@ namespace Business.Services.Abstract
         Task<int?> AddUserAsync(UserDto userDto);
         Task<bool> UpdateUserAsync(UserDto userDto);
         Task<bool> DeleteUser(int Id);
-        Task<BaseResult?> Login(UserDto userDto);
+        Task<LoginResult?> Login(UserDto userDto);
 
     }
 }

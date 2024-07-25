@@ -1,9 +1,11 @@
 ﻿using Business.Services.Abstract;
 using Entities.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace VSSApi.Controllers
 {
+    [Authorize(Roles = "admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
@@ -15,6 +17,7 @@ namespace VSSApi.Controllers
             _userService = userService;
         }
 
+        [AllowAnonymous]
         [HttpPost("[action]")]
         public async Task<IActionResult> Login(UserDto userDto)
         {
@@ -22,10 +25,11 @@ namespace VSSApi.Controllers
             return Ok(response);
         }
 
+  
         [HttpPost("[action]")]
-        public IActionResult CreateUser(UserDto userDto)
+        public async Task<IActionResult> CreateUserAsync(UserDto userDto)
         {
-            var response = _userService.AddUserAsync(userDto);
+            var response = await _userService.AddUserAsync(userDto);
             return Ok(response);
         }
     }

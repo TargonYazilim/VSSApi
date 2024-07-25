@@ -6,6 +6,7 @@
         public string username { get; set; }
         public string password { get; set; }
         public string MACADDRESS { get; set; }
+        public string? role { get; set; }
         public DateTime? CreateDate { get; set; }
         public DateTime? UpdateDate { get; set; }
     }

@@ -4,6 +4,13 @@ using DataAccess.Dal.Abstract;
 using Entities;
 using Entities.Concrete;
 using Entities.Dtos;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using Shared.Models;
+using Shared.Models.Login;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace Business.Services.Concrete
 {
@@ -11,13 +18,14 @@ namespace Business.Services.Concrete
     {
         private readonly IMapper _mapper;
         private readonly IUserDal _userDal;
-
-        public UserService(IMapper mapper, IUserDal userDal)
+        private readonly JwtSettings _jwtSettings;
+        public UserService(IMapper mapper, IUserDal userDal, IOptions<JwtSettings> jwtSettings)
         {
             _mapper = mapper;
             _userDal = userDal;
+            _jwtSettings = jwtSettings.Value;
         }
-        public async Task<BaseResult?> Login(UserDto userDto)
+        public async Task<LoginResult?> Login(UserDto userDto)
         {
             var result = await _userDal.Login(_mapper.Map<User>(userDto));
             if (result != null)
@@ -36,7 +44,7 @@ namespace Business.Services.Concrete
                     }
                     else if (user == null && macAddress.hasMacAddress)
                     {
-                        return new BaseResult()
+                        return new LoginResult()
                         { Error = "1", Result = "Cihaz başka bir hesaba bağlı" };
                     }
                     else if (user != null && user.MACADDRESS == null && !macAddress.hasMacAddress)
@@ -44,25 +52,46 @@ namespace Business.Services.Concrete
                         /// Mac adresi başka bir hesaba bağlı değilse,
                         /// Hesapta başka bir mac adresi kayıtlı değilse ve,
                         /// Mevcut hesap var ise yeni mac adresini güncelle
-                        userDto.Id = user.Id;
-                        userDto.CreateDate = user.CreateDate;
-                        await UpdateUserAsync(userDto);
+                        await UpdateUserAsync(_mapper.Map<UserDto>(user));
                     }
                     else if ((user != null && user.MACADDRESS == null && macAddress.hasMacAddress)
                         || user != null && user.Id != macAddress.Id)
                     {
-                        return new BaseResult()
+                        return new LoginResult()
                         { Error = "1", Result = "Hesabınız başka bir cihaza bağlı" };
                     }
                 }
             }
-            return new BaseResult()
-            { Error = "0", Result = "Giriş başarılı" }; ;
+            var token = CreateToken(userDto);
+            return new LoginResult()
+            { Error = "0", Result = "Giriş başarılı" ,Token = token}; ;
+        }
+
+        private string CreateToken(UserDto userDto)
+        {
+            if (_jwtSettings.Key == null) throw new Exception("Jwt ayarlarındaki key değeri null olamaz");
+
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
+            var credantials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, userDto.username),
+                new Claim(ClaimTypes.Role, userDto.role ?? string.Empty),
+            };
+
+            var token = new JwtSecurityToken(_jwtSettings.Issuer,
+                _jwtSettings.Audience,
+                claims,
+                expires: DateTime.Now.AddDays(Convert.ToInt32(_jwtSettings.ExpireDay)),
+                signingCredentials: credantials);
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
         public async Task<int?> AddUserAsync(UserDto userDto)
         {
-            return await _userDal.Add(_mapper.Map<User>(userDto));
+            var result = await _userDal.Add(_mapper.Map<User>(userDto));
+            return result;
         }
 
         public async Task<bool> DeleteUser(int Id)
