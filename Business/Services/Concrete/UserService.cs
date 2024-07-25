@@ -52,7 +52,10 @@ namespace Business.Services.Concrete
                         /// Mac adresi başka bir hesaba bağlı değilse,
                         /// Hesapta başka bir mac adresi kayıtlı değilse ve,
                         /// Mevcut hesap var ise yeni mac adresini güncelle
-                        await UpdateUserAsync(_mapper.Map<UserDto>(user));
+                        userDto.CreateDate = user.CreateDate;   
+                        userDto.role = user.role;   
+                        userDto.Id = user.Id;   
+                        await UpdateUserAsync(userDto);
                     }
                     else if ((user != null && user.MACADDRESS == null && macAddress.hasMacAddress)
                         || user != null && user.Id != macAddress.Id)
