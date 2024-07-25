@@ -3,7 +3,6 @@ using DataAccess.Context;
 using DataAccess.Dal.Abstract;
 using Entities;
 using Entities.Concrete;
-using Entities.Dtos;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
@@ -13,6 +12,36 @@ namespace DataAccess.Dal.Concrete
 {
     public class UserDal : EntityRepository<User, DataContext>, IUserDal
     {
+        public async Task<(bool hasMacAddress, int? Id)> CheckMacAddressAsync(string macAddress)
+        {
+            using (DataContext _context = new DataContext())
+            {
+                var result = await _context.Set<User>()
+                    .Where(x => x.MACADDRESS == macAddress).Select(item => new User()
+                    {
+                        Id = item.Id,
+                        MACADDRESS = item.MACADDRESS,
+                    }).FirstOrDefaultAsync();
+                var hasMacAddress = result == null ? false : true;
+                return (hasMacAddress, result?.Id);
+            }
+        }
+
+        public async Task<User?> GetByUsernameAsync(string username)
+        {
+            using (DataContext _context = new DataContext())
+            {
+                return await _context.Set<User>()
+                    .Where(x => x.username == username).Select(item => new User()
+                    {
+                        Id = item.Id,
+                        username = item.username,
+                        MACADDRESS = item.MACADDRESS,
+                        CreateDate = item.CreateDate,
+                    }).FirstOrDefaultAsync();
+            }
+        }
+
         public async Task<BaseResult?> Login(User user)
         {
 

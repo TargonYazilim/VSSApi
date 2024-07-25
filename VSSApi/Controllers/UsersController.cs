@@ -25,7 +25,7 @@ namespace VSSApi.Controllers
         [HttpPost("[action]")]
         public IActionResult CreateUser(UserDto userDto)
         {
-            var response = _userService.AddUser(userDto);
+            var response = _userService.AddUserAsync(userDto);
             return Ok(response);
         }
     }

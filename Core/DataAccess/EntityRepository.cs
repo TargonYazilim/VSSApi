@@ -1,5 +1,6 @@
 ﻿using Core.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Linq.Expressions;
 
 namespace Core.DataAccess
@@ -8,33 +9,31 @@ namespace Core.DataAccess
           where TEntity : BaseEntity, new()
           where TContext : DbContext, new()
     {
-        public int? Add(TEntity entity)
+        public async Task<int?> Add(TEntity entity)
         {
             using (TContext context = new TContext())//using içindeki context garbage collector yardımıyla belleği hızlıca temizler.Performans için yazdık.
             {
-                var addedEntity = context.Entry(entity);
-                entity.CreateDate = DateTime.Now;
-                addedEntity.State = EntityState.Added;//Ekleme işlemi yapılacağını bildirdik. 
 
-                context.SaveChanges();//İşlemleri gerçekleştir.
+                EntityEntry<TEntity> entityEntry = context.Add(entity);
+                entityEntry.State = EntityState.Added;
+                await context.SaveChangesAsync();//İşlemleri gerçekleştir.
 
                 /// GetId
                 return entity.Id;
             }
         }
-        public bool Update(TEntity entity)
+        public async Task<bool> Update(TEntity entity)
         {
             using (TContext context = new TContext())
             {
-                var updatedEntity = context.Entry(entity);
-                entity.UpdateDate = DateTime.Now;
-                updatedEntity.State = EntityState.Modified;
+                EntityEntry<TEntity> entityEntry = context.Update(entity);
+                entityEntry.State = EntityState.Modified;
 
-                return context.SaveChanges() > 1 ? true : false;
+                return (await context.SaveChangesAsync()) > 1 ? true : false;
             }
         }
 
-        public bool Delete(TEntity entity)
+        public async Task<bool> Delete(TEntity entity)
         {
             using (TContext context = new TContext())
             {
@@ -42,7 +41,7 @@ namespace Core.DataAccess
 
                 deletedEntity.State = EntityState.Deleted;
 
-                return context.SaveChanges() > 1 ? true : false;
+                return await context.SaveChangesAsync() > 1 ? true : false;
             }
         }
 

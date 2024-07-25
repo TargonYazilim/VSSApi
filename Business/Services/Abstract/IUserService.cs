@@ -7,8 +7,8 @@ namespace Business.Services.Abstract
     {
         Task<List<UserDto>> GetAllUser();
         Task<UserDto> GetUser(int Id);
-        int? AddUser(UserDto userDto);
-        bool UpdateUser(UserDto userDto);
+        Task<int?> AddUserAsync(UserDto userDto);
+        Task<bool> UpdateUserAsync(UserDto userDto);
         Task<bool> DeleteUser(int Id);
         Task<BaseResult?> Login(UserDto userDto);
 

@@ -19,18 +19,56 @@ namespace Business.Services.Concrete
         }
         public async Task<BaseResult?> Login(UserDto userDto)
         {
-            return await _userDal.Login(_mapper.Map<User>(userDto));
+            var result = await _userDal.Login(_mapper.Map<User>(userDto));
+            if (result != null)
+            {
+                int.TryParse(result.Error, out int error);
+                if (error == 1) return result;
+                else
+                {
+                    /// Db'den kullanıcı adına göre veriyi getir.
+                    var user = await _userDal.GetByUsernameAsync(userDto.username);
+                    var macAddress = await _userDal.CheckMacAddressAsync(userDto.MACADDRESS);
+                    if (user == null && !macAddress.hasMacAddress)
+                    {
+                        /// Kullanıcı yok ise ve mac adresi de başka yerde yok ise kullanıcıyı kayıt et.
+                        await AddUserAsync(userDto);
+                    }
+                    else if (user == null && macAddress.hasMacAddress)
+                    {
+                        return new BaseResult()
+                        { Error = "1", Result = "Cihaz başka bir hesaba bağlı" };
+                    }
+                    else if (user != null && user.MACADDRESS == null && !macAddress.hasMacAddress)
+                    {
+                        /// Mac adresi başka bir hesaba bağlı değilse,
+                        /// Hesapta başka bir mac adresi kayıtlı değilse ve,
+                        /// Mevcut hesap var ise yeni mac adresini güncelle
+                        userDto.Id = user.Id;
+                        userDto.CreateDate = user.CreateDate;
+                        await UpdateUserAsync(userDto);
+                    }
+                    else if ((user != null && user.MACADDRESS == null && macAddress.hasMacAddress)
+                        || user != null && user.Id != macAddress.Id)
+                    {
+                        return new BaseResult()
+                        { Error = "1", Result = "Hesabınız başka bir cihaza bağlı" };
+                    }
+                }
+            }
+            return new BaseResult()
+            { Error = "0", Result = "Giriş başarılı" }; ;
         }
 
-        public int? AddUser(UserDto userDto)
+        public async Task<int?> AddUserAsync(UserDto userDto)
         {
-            return _userDal.Add(_mapper.Map<User>(userDto));
+            return await _userDal.Add(_mapper.Map<User>(userDto));
         }
 
         public async Task<bool> DeleteUser(int Id)
         {
             var userDto = await GetUser(Id);
-            return _userDal.Delete(_mapper.Map<User>(userDto));
+            return await _userDal.Delete(_mapper.Map<User>(userDto));
         }
 
         public async Task<List<UserDto>> GetAllUser()
@@ -43,9 +81,9 @@ namespace Business.Services.Concrete
             return _mapper.Map<UserDto>(await _userDal.GetAsync(x => x.Id == Id));
         }
 
-        public bool UpdateUser(UserDto userDto)
+        public async Task<bool> UpdateUserAsync(UserDto userDto)
         {
-            return _userDal.Update(_mapper.Map<User>(userDto));
+            return await _userDal.Update(_mapper.Map<User>(userDto));
         }
     }
 }

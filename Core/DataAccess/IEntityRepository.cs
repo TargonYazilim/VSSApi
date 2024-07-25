@@ -7,8 +7,8 @@ namespace Core.DataAccess
     {
         Task<List<T>?> GetAllAsync(Expression<Func<T, bool>>? filter = null, bool tracking = false, params Expression<Func<T, object>>[] includes);
         Task<T?> GetAsync(Expression<Func<T, bool>> filter, bool tracking = false, params Expression<Func<T, object>>[] includes);
-        int? Add(T entity);
-        bool Update(T entity);
-        bool Delete(T entity);
+        Task<int?> Add(T entity);
+        Task<bool> Update(T entity);
+        Task<bool> Delete(T entity);
     }
 }

@@ -8,6 +8,6 @@ namespace Entities.Concrete
         public string username { get; set; }
         [NotMapped]
         public string password { get; set; }
-        public string MACADDRESS { get; set; }
+        public string? MACADDRESS { get; set; }
     }
 }
