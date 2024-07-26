@@ -68,25 +68,20 @@ namespace VSSApi
 
             });
 
-
-
-
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer("Admin", opt =>
+                .AddJwtBearer(opt =>
                 {
-                    opt.TokenValidationParameters = new()
+                    opt.TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidateAudience = true, // Oluşturulacak token değerinin kimlerin/hangi originlerin/sitelerin kullanıcı belirlediğimiz değerdir.
-                        ValidateIssuer = true, // Oluşturulacak token değerinin kimin dağıttığını ifade edeceğimiz alan
-                        ValidateLifetime = true, // Oluşturulan token değerinin süresini kontrol edecek olan doğrulama
-                        ValidateIssuerSigningKey = true, // Üretilecek token değerinin uygulamamıza ait bir değer olduğunu ifade eden suciry key verisinin doğrulamasıdır.
+                        ValidateIssuer = true,/// Tokendaki verilerin doğruluğunu kontrol et 
+                        ValidateAudience = true,/// Tokendaki verilerin doğruluğunu kontrol et 
+                        ValidateLifetime = true,/// Token'ın süresinin geçip geçimediğini kontrol et.
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = configuration["Jwt:Issuer"],
+                        ValidAudience = configuration["Jwt:Audience"],
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"] ?? string.Empty)),
 
-                        ValidAudience = configuration["Token:Audience"],
-                        ValidIssuer = configuration["Token:Issuer"],
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Token:SecurityKey"])),
-                        LifetimeValidator = (notBefore, expires, securityToken, validationParameters) => expires != null ? expires > DateTime.UtcNow : false,
-
-                        NameClaimType = ClaimTypes.Name //JWT üzerinde Name claimne karşılık gelen değeri User.Identity.Name propertysinden elde edebiliriz.
+                        NameClaimType = ClaimTypes.NameIdentifier //JWT üzerinde Name claimne karşılık gelen değeri User.Identity.Name propertysinden elde edebiliriz.
                     };
                 });
             #endregion
