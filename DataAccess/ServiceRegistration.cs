@@ -11,6 +11,7 @@ namespace DataAccess
         public static void AddDataAccess(this IServiceCollection services)
         {
             services.AddScoped<IUserDal, UserDal>();
+            services.AddScoped<IOrderDal, OrderDal>();
 
             services.AddDbContext<DataContext>(opt => opt.UseSqlServer(Configuration.ConnectionString));
         }

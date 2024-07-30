@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
 using Business.Services.Abstract;
 using DataAccess.Dal.Abstract;
-using Entities;
 using Entities.Concrete;
 using Entities.Dtos;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Shared.Constants;
 using Shared.Models;
 using Shared.Models.Login;
 using System.IdentityModel.Tokens.Jwt;
@@ -25,53 +25,54 @@ namespace Business.Services.Concrete
             _userDal = userDal;
             _jwtSettings = jwtSettings.Value;
         }
-        public async Task<LoginResult?> Login(UserDto userDto)
+        public async Task<LoginResult?> Login(LoginRequest loginRequest)
         {
-            var result = await _userDal.Login(_mapper.Map<User>(userDto));
+            var result = await _userDal.Login(_mapper.Map<User>(loginRequest));
             if (result != null)
             {
                 int.TryParse(result.Error, out int error);
-                if (error == 1) return result;
+                if (error == 1) return new LoginResult() { Error = result.Error, Result = result.Result, Token = null };
                 else
                 {
                     /// Db'den kullanıcı adına göre veriyi getir.
-                    var user = await _userDal.GetByUsernameAsync(userDto.username);
-                    var macAddress = await _userDal.CheckMacAddressAsync(userDto.MACADDRESS);
-                    if (user == null && !macAddress.hasMacAddress)
+                    var userDto = _mapper.Map<UserDto>(await _userDal.GetByUsernameAsync(loginRequest.username));
+                    var macAddress = await _userDal.CheckMacAddressAsync(loginRequest.MACADDRESS);
+                    if (userDto == null && !macAddress.hasMacAddress)
                     {
                         /// Kullanıcı yok ise ve mac adresi de başka yerde yok ise kullanıcıyı kayıt et.
+                        userDto = new UserDto() { LOGICALREF = result.LOGICALREF, MACADDRESS = loginRequest.MACADDRESS, role = Roles.user, username = loginRequest.username };
                         await AddUserAsync(userDto);
                     }
-                    else if (user == null && macAddress.hasMacAddress)
+                    else if (userDto == null && macAddress.hasMacAddress)
                     {
                         return new LoginResult()
                         { Error = "1", Result = "Cihaz başka bir hesaba bağlı" };
                     }
-                    else if (user != null && user.MACADDRESS == null && !macAddress.hasMacAddress)
+                    else if (userDto != null && userDto.MACADDRESS == null && !macAddress.hasMacAddress)
                     {
                         /// Mac adresi başka bir hesaba bağlı değilse,
                         /// Hesapta başka bir mac adresi kayıtlı değilse ve,
                         /// Mevcut hesap var ise yeni mac adresini güncelle
-                        userDto.CreateDate = user.CreateDate;   
-                        userDto.role = user.role;   
-                        userDto.Id = user.Id;   
                         await UpdateUserAsync(userDto);
                     }
-                    else if ((user != null && user.MACADDRESS == null && macAddress.hasMacAddress)
-                        || user != null && user.Id != macAddress.Id)
+                    else if ((userDto != null && userDto.MACADDRESS == null && macAddress.hasMacAddress)
+                        || userDto != null && userDto.Id != macAddress.Id)
                     {
                         return new LoginResult()
                         { Error = "1", Result = "Hesabınız başka bir cihaza bağlı" };
                     }
+
+                    var token = CreateToken(userDto);
+                    return new LoginResult()
+                    { Error = "0", Result = "Giriş başarılı", Token = token, Id = result.LOGICALREF };
                 }
             }
-            var token = CreateToken(userDto);
-            return new LoginResult()
-            { Error = "0", Result = "Giriş başarılı" ,Token = token}; ;
+            return null;
         }
 
-        private string CreateToken(UserDto userDto)
+        private string CreateToken(UserDto? userDto)
         {
+            if (userDto == null) throw new Exception("Token oluşturulamıyor user null");
             if (_jwtSettings.Key == null) throw new Exception("Jwt ayarlarındaki key değeri null olamaz");
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
@@ -117,5 +118,6 @@ namespace Business.Services.Concrete
         {
             return await _userDal.Update(_mapper.Map<User>(userDto));
         }
+
     }
 }

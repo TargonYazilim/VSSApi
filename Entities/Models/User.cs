@@ -10,5 +10,6 @@ namespace Entities.Concrete
         public string password { get; set; }
         public string? MACADDRESS { get; set; }
         public string? role { get; set; }
+        public int LOGICALREF { get; set; }
     }
 }

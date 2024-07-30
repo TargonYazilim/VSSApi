@@ -11,7 +11,7 @@ namespace Business.Services.Abstract
         Task<int?> AddUserAsync(UserDto userDto);
         Task<bool> UpdateUserAsync(UserDto userDto);
         Task<bool> DeleteUser(int Id);
-        Task<LoginResult?> Login(UserDto userDto);
+        Task<LoginResult?> Login(LoginRequest loginRequest);
 
     }
 }

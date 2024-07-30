@@ -6,6 +6,7 @@ using Entities.Concrete;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Shared.Models.Login;
+using Shared.Models.StoreProcedure;
 using System.Data;
 using System.Text.Json;
 
@@ -37,7 +38,7 @@ namespace DataAccess.Dal.Concrete
             }
         }
 
-        public async Task<LoginResult?> Login(User user)
+        public async Task<LoginStoreProcedureResult?> Login(User user)
         {
 
             using (DataContext _context = new DataContext())
@@ -59,7 +60,7 @@ namespace DataAccess.Dal.Concrete
                 if (await reader.ReadAsync())
                 {
                     var resultJson = reader.GetString(0);
-                    return JsonSerializer.Deserialize<LoginResult>(resultJson);
+                    return JsonSerializer.Deserialize<LoginStoreProcedureResult>(resultJson);
                 }
                 return null;
             }

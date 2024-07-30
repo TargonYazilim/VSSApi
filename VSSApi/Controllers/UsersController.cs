@@ -2,6 +2,7 @@
 using Entities.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Models.Login;
 
 namespace VSSApi.Controllers
 {
@@ -19,9 +20,9 @@ namespace VSSApi.Controllers
 
         [AllowAnonymous]
         [HttpPost("[action]")]
-        public async Task<IActionResult> Login(UserDto userDto)
+        public async Task<IActionResult> Login(LoginRequest loginRequest)
         {
-            var response = await _userService.Login(userDto);
+            var response = await _userService.Login(loginRequest);
             return Ok(response);
         }
 

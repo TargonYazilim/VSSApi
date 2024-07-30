@@ -10,6 +10,7 @@ namespace Business
         public static void Business(this IServiceCollection services)
         {
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IOrderService, OrderService>();
         }
     }
 }
