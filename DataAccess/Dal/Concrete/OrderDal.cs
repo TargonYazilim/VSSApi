@@ -1,6 +1,5 @@
 ﻿using DataAccess.Context;
 using DataAccess.Dal.Abstract;
-using Entities.Concrete;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Shared.Models.StoreProcedure;
@@ -33,6 +32,32 @@ namespace DataAccess.Dal.Concrete
                 {
                     var resultJson = reader.GetString(0);
                     return JsonSerializer.Deserialize<OrderResult>(resultJson);
+                }
+                return null;
+            }
+        }
+
+        public async Task<OrderDetailResult?> GetOrderDetail(string SiparisNumarasi)
+        {
+            using (DataContext _context = new DataContext())
+            {
+                var connection = _context.Database.GetDbConnection();
+                await using var command = connection.CreateCommand();
+                command.CommandText = "OrderLineRead";
+                command.CommandType = CommandType.StoredProcedure;
+
+                command.Parameters.Add(new SqlParameter("@SiparisNumarasi", SqlDbType.NVarChar) { Value = SiparisNumarasi });
+
+                if (connection.State == ConnectionState.Closed)
+                {
+                    await connection.OpenAsync();
+                }
+
+                await using var reader = await command.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    var resultJson = reader.GetString(0);
+                    return JsonSerializer.Deserialize<OrderDetailResult>(resultJson);
                 }
                 return null;
             }

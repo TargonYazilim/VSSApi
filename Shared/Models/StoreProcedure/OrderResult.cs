@@ -11,7 +11,6 @@
         public string cariKodu { get; set; }
         public string cariUnvan { get; set; }
         public string teslimatTarihi { get; set; }
-
     }
 
     public class OrderResult

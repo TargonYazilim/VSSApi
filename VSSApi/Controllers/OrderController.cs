@@ -18,8 +18,13 @@ namespace VSSApi.Controllers
         [HttpGet("[action]")]
         public async Task<IActionResult> GetOrder([FromQuery] int LOGICALREF)
         {
-            var response = await _orderService.GetOrder(LOGICALREF);
-            return Ok(response);
+            return Ok(await _orderService.GetOrder(LOGICALREF));
+        }
+
+        [HttpGet("[action]")]
+        public async Task<IActionResult> GetOrderDetail([FromQuery] string SiparisNumarasi)
+        {
+            return Ok(await _orderService.GetOrderDetail(SiparisNumarasi));
         }
     }
 }

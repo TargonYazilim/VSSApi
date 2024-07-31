@@ -20,7 +20,7 @@ namespace VSSApi.Controllers
 
         [AllowAnonymous]
         [HttpPost("[action]")]
-        public async Task<IActionResult> Login(LoginRequest loginRequest)
+        public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
         {
             var response = await _userService.Login(loginRequest);
             return Ok(response);

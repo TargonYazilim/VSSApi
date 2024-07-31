@@ -14,8 +14,12 @@ namespace Business.Services.Concrete
         }
         public async Task<OrderResult?> GetOrder(int LOGICALREF)
         {
-            var resu = await _orderDal.GetOrder(LOGICALREF);
-            return resu;
+            return await _orderDal.GetOrder(LOGICALREF);
+        }
+
+        public async Task<OrderDetailResult?> GetOrderDetail(string SiparisNumarasi)
+        {
+            return await _orderDal.GetOrderDetail(SiparisNumarasi);
         }
     }
 }

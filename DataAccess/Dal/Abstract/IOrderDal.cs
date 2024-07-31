@@ -5,5 +5,6 @@ namespace DataAccess.Dal.Abstract
     public interface IOrderDal
     {
         public Task<OrderResult?> GetOrder(int LOGICALREF);
+        public Task<OrderDetailResult?> GetOrderDetail(string SiparisNumarasi);
     }
 }
