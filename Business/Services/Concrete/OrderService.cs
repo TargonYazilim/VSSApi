@@ -21,5 +21,10 @@ namespace Business.Services.Concrete
         {
             return await _orderDal.GetOrderDetail(SiparisNumarasi);
         }
+
+        public async Task<OrderBarcodeScanResult?> ScanOrderBarcode(string Barkod)
+        {
+            return await _orderDal.ScanOrderBarcode(Barkod);
+        }
     }
 }

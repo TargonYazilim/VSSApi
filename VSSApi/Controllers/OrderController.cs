@@ -26,5 +26,11 @@ namespace VSSApi.Controllers
         {
             return Ok(await _orderService.GetOrderDetail(SiparisNumarasi));
         }
+
+        [HttpGet("[action]")]
+        public async Task<IActionResult> ScanOrderBarcode([FromQuery] string Barkod)
+        {
+            return Ok(await _orderService.ScanOrderBarcode(Barkod));
+        }
     }
 }

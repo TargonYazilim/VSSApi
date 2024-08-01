@@ -62,5 +62,31 @@ namespace DataAccess.Dal.Concrete
                 return null;
             }
         }
+
+        public async Task<OrderBarcodeScanResult?> ScanOrderBarcode(string Barkod)
+        {
+            using (DataContext _context = new DataContext())
+            {
+                var connection = _context.Database.GetDbConnection();
+                await using var command = connection.CreateCommand();
+                command.CommandText = "GetItemByBarcode";
+                command.CommandType = CommandType.StoredProcedure;
+
+                command.Parameters.Add(new SqlParameter("@Barkod", SqlDbType.NVarChar) { Value = Barkod });
+
+                if (connection.State == ConnectionState.Closed)
+                {
+                    await connection.OpenAsync();
+                }
+
+                await using var reader = await command.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    var resultJson = reader.GetString(0);
+                    return JsonSerializer.Deserialize<OrderBarcodeScanResult>(resultJson);
+                }
+                return null;
+            }
+        }
     }
 }

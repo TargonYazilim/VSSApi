@@ -6,5 +6,6 @@ namespace Business.Services.Abstract
     {
         Task<OrderResult?> GetOrder(int LOGICALREF);
         Task<OrderDetailResult?> GetOrderDetail(string SiparisNumarasi);
+        Task<OrderBarcodeScanResult?> ScanOrderBarcode(string Barkod);
     }
 }

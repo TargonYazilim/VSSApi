@@ -6,5 +6,6 @@ namespace DataAccess.Dal.Abstract
     {
         public Task<OrderResult?> GetOrder(int LOGICALREF);
         public Task<OrderDetailResult?> GetOrderDetail(string SiparisNumarasi);
+        public Task<OrderBarcodeScanResult?> ScanOrderBarcode(string Barkod);
     }
 }
