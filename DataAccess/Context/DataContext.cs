@@ -1,5 +1,6 @@
 ﻿using Core.Entities;
 using Entities.Concrete;
+using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataAccess.Context
@@ -16,6 +17,8 @@ namespace DataAccess.Context
         }
 
         public virtual DbSet<User> Users { get; set; }
+        public virtual DbSet<Order> Orders { get; set; }
+        public virtual DbSet<OrderDetail>  OrderDetails { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -28,6 +31,38 @@ namespace DataAccess.Context
                 entity.Property(e => e.username).HasMaxLength(50).HasColumnName("username");
                 entity.Property(e => e.MACADDRESS).HasMaxLength(64).HasColumnName("MACADDRESS");
                 entity.Property(e => e.role).HasMaxLength(64).HasColumnName("role");
+                entity.Property(e => e.LOGICALREF).HasColumnName("LOGICALREF");
+            });
+
+            modelBuilder.Entity<Order>(entity =>
+            {
+                entity.ToTable("Orders");
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+                entity.Property(e => e.siparisNumarasi).HasMaxLength(64).HasColumnName("siparisNumarasi");
+                entity.Property(e => e.status).HasColumnName("status");
+
+                entity.HasOne(e => e.User)
+                .WithMany(e => e.Orders)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<OrderDetail>(entity =>
+            {
+                entity.ToTable("OrderDetails");
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+                entity.Property(e => e.siparisNumarasi).HasMaxLength(64).HasColumnName("siparisNumarasi");
+                entity.Property(e => e.malzemeKodu).HasMaxLength(64).HasColumnName("malzemeKodu");
+                entity.Property(e => e.scanResult).HasMaxLength(32).HasColumnName("scanResult");
+
+                entity.HasOne(e => e.Order)
+                .WithMany(e => e.OrderDetails)
+                .HasForeignKey(e => e.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
             });
         }
 

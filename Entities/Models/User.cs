@@ -1,4 +1,5 @@
 ﻿using Core.Entities;
+using Entities.Models;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Entities.Concrete
@@ -11,5 +12,6 @@ namespace Entities.Concrete
         public string? MACADDRESS { get; set; }
         public string? role { get; set; }
         public int LOGICALREF { get; set; }
+        public ICollection<Order> Orders { get; set; }
     }
 }
