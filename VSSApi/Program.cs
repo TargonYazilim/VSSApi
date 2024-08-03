@@ -46,7 +46,7 @@ builder.Logging.AddSerilog(log);
 
 builder.Host.UseSerilog(log);
 
-
+builder.Services.AddHttpContextAccessor();//Client'tan gelen request neticesinde oluþturulan HttpContext nesnesine katmanlardaki class'lar üzerinden eriþebilmemizi saðlar. Ve aktif kullanýcý bilgilerini verir
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 

@@ -6,6 +6,7 @@ namespace Business.Services.Abstract
 {
     public interface IUserService
     {
+        Task<UserDto?> GetByUsername(string username);
         Task<List<UserDto>> GetAllUser();
         Task<UserDto> GetUser(int Id);
         Task<int?> AddUserAsync(UserDto userDto);

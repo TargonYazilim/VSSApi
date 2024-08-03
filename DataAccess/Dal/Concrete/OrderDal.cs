@@ -1,5 +1,7 @@
-﻿using DataAccess.Context;
+﻿using Core.DataAccess;
+using DataAccess.Context;
 using DataAccess.Dal.Abstract;
+using Entities.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Shared.Models.StoreProcedure;
@@ -8,9 +10,10 @@ using System.Text.Json;
 
 namespace DataAccess.Dal.Concrete
 {
-    public class OrderDal : IOrderDal
+    public class OrderDal : EntityRepository<Order, DataContext>, IOrderDal
     {
-        public async Task<OrderResult?> GetOrder(int LOGICALREF)
+
+        public async Task<OrderResult?> GetOrderProcedure(int LOGICALREF)
         {
 
             using (DataContext _context = new DataContext())
@@ -37,7 +40,7 @@ namespace DataAccess.Dal.Concrete
             }
         }
 
-        public async Task<OrderDetailResult?> GetOrderDetail(string SiparisNumarasi)
+        public async Task<OrderDetailResult?> GetOrderDetailProcedure(string SiparisNumarasi)
         {
             using (DataContext _context = new DataContext())
             {
@@ -63,7 +66,7 @@ namespace DataAccess.Dal.Concrete
             }
         }
 
-        public async Task<OrderBarcodeScanResult?> ScanOrderBarcode(string Barkod)
+        public async Task<OrderBarcodeScanResult?> ScanOrderBarcodeProcedure(string Barkod)
         {
             using (DataContext _context = new DataContext())
             {
@@ -86,6 +89,14 @@ namespace DataAccess.Dal.Concrete
                     return JsonSerializer.Deserialize<OrderBarcodeScanResult>(resultJson);
                 }
                 return null;
+            }
+        }
+
+        public async Task<Order?> GetOrderBySiparisNumarasi(string SiparisNumarasi, int userId)
+        {
+            using (DataContext _context = new DataContext())
+            {
+                return await _context.Set<Order>().Include(i => i.OrderDetails).FirstOrDefaultAsync(p => p.siparisNumarasi == SiparisNumarasi && p.UserId == userId);
             }
         }
     }

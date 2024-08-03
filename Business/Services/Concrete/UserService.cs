@@ -119,5 +119,9 @@ namespace Business.Services.Concrete
             return await _userDal.Update(_mapper.Map<User>(userDto));
         }
 
+        public async Task<UserDto?> GetByUsername(string username)
+        {
+            return _mapper.Map<UserDto>(await _userDal.GetByUsernameAsync(username));
+        }
     }
 }

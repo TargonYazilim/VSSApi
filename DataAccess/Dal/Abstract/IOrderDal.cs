@@ -1,11 +1,15 @@
-﻿using Shared.Models.StoreProcedure;
+﻿using Core.DataAccess;
+using Entities.Dtos;
+using Entities.Models;
+using Shared.Models.StoreProcedure;
 
 namespace DataAccess.Dal.Abstract
 {
-    public interface IOrderDal
+    public interface IOrderDal : IEntityRepository<Order>
     {
-        public Task<OrderResult?> GetOrder(int LOGICALREF);
-        public Task<OrderDetailResult?> GetOrderDetail(string SiparisNumarasi);
-        public Task<OrderBarcodeScanResult?> ScanOrderBarcode(string Barkod);
+        public Task<Order?> GetOrderBySiparisNumarasi(string SiparisNumarasi,int userId);
+        public Task<OrderResult?> GetOrderProcedure(int LOGICALREF);
+        public Task<OrderDetailResult?> GetOrderDetailProcedure(string SiparisNumarasi);
+        public Task<OrderBarcodeScanResult?> ScanOrderBarcodeProcedure(string Barkod);
     }
 }

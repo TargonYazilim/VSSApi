@@ -1,6 +1,6 @@
 ﻿namespace Shared.Models.StoreProcedure
 {
-    public class Order
+    public class OrderProcedure
     {
         public int SiparisLogicalRef { get; set; }
         public string SiparisNumarasi { get; set; }
@@ -17,7 +17,7 @@
     {
         public int ErrorCode { get; set; }
         public string Result { get; set; }
-        public List<Order> Orders { get; set; }
+        public List<OrderProcedure> Orders { get; set; }
     }
 
 }
