@@ -4,6 +4,7 @@ using DataAccess.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240805083127_mig_2")]
+    partial class mig_2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -118,8 +121,16 @@ namespace DataAccess.Migrations
                         .HasColumnType("nvarchar(64)")
                         .HasColumnName("malzemeKodu");
 
-                    b.Property<int>("siparisId")
-                        .HasColumnType("int")
+                    b.Property<string>("scanResult")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)")
+                        .HasColumnName("scanResult");
+
+                    b.Property<string>("siparisId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)")
                         .HasColumnName("siparisId");
 
                     b.Property<string>("siparisNumarasi")
@@ -133,36 +144,6 @@ namespace DataAccess.Migrations
                     b.HasIndex("OrderId");
 
                     b.ToTable("OrderDetails", (string)null);
-                });
-
-            modelBuilder.Entity("Entities.Models.Scan", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("CreateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("orderDetailId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("result")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("nvarchar(32)")
-                        .HasColumnName("result");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("orderDetailId");
-
-                    b.ToTable("Scans", (string)null);
                 });
 
             modelBuilder.Entity("Entities.Models.Order", b =>
@@ -187,17 +168,6 @@ namespace DataAccess.Migrations
                     b.Navigation("Order");
                 });
 
-            modelBuilder.Entity("Entities.Models.Scan", b =>
-                {
-                    b.HasOne("Entities.Models.OrderDetail", "OrderDetail")
-                        .WithMany("Scans")
-                        .HasForeignKey("orderDetailId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("OrderDetail");
-                });
-
             modelBuilder.Entity("Entities.Concrete.User", b =>
                 {
                     b.Navigation("Orders");
@@ -206,11 +176,6 @@ namespace DataAccess.Migrations
             modelBuilder.Entity("Entities.Models.Order", b =>
                 {
                     b.Navigation("OrderDetails");
-                });
-
-            modelBuilder.Entity("Entities.Models.OrderDetail", b =>
-                {
-                    b.Navigation("Scans");
                 });
 #pragma warning restore 612, 618
         }

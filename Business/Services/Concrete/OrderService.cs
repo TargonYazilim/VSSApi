@@ -1,7 +1,6 @@
-﻿
-using AutoMapper;
-using Business.Services.Abstract;
+﻿using Business.Services.Abstract;
 using DataAccess.Dal.Abstract;
+using Entities.Concrete;
 using Entities.Dtos;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
@@ -14,69 +13,102 @@ namespace Business.Services.Concrete
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IOrderDal _orderDal;
         private readonly IUserService _userService;
-        private readonly IMapper _mapper;
-        public OrderService(IOrderDal orderDal, IMapper mapper, IHttpContextAccessor httpContextAccessor, IUserService userService)
+        public OrderService(IOrderDal orderDal, IHttpContextAccessor httpContextAccessor, IUserService userService)
         {
             _orderDal = orderDal;
-            _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _userService = userService;
         }
         public async Task<OrderResult?> GetOrderProcedure(int LOGICALREF)
         {
-            return await _orderDal.GetOrderProcedure(LOGICALREF);
+
+            var user = await ContextUser();
+            var ordersFromProcedure = await _orderDal.GetOrderProcedure(LOGICALREF);
+            /// Procedure'dan order detaylarını çekerken eğer ara tabloda scanResult mevcut ise o veriyi 
+            /// OrderFromProcedure'e implement et.
+            if (ordersFromProcedure != null)
+            {
+                foreach (var order in ordersFromProcedure.orders)
+                {
+                    foreach (var orderFromProcedure in order.orderDetails)
+                    {
+
+                        var orderFromDb = await _orderDal.GetOrderBySiparisNumarasi(user.Id, order.siparisNumarasi);
+                        if (orderFromDb != null)
+                        {
+                            var hasOrder = orderFromDb.OrderDetails.FirstOrDefault(x => x.siparisId == orderFromProcedure.siparisId);
+                            if (hasOrder != null && hasOrder.Scans != null)
+                            {
+                                orderFromProcedure.scans = hasOrder.Scans.Select(scan => new ScanProcedure
+                                {
+                                    scanId = scan.Id,
+                                    result = scan.result
+                                }).ToList();
+                            }
+                        }
+                    }
+                }
+            }
+            return ordersFromProcedure;
         }
 
-        public async Task<OrderDetailResult?> GetOrderDetailProcedure(string SiparisNumarasi)
+        public async Task<OrderBarcodeScanResult?> ScanOrderBarcodeProcedure(ScanBarcode scanBarcode)
         {
-            return await _orderDal.GetOrderDetailProcedure(SiparisNumarasi);
-        }
-
-        public async Task<OrderBarcodeScanResult?> ScanOrderBarcodeProcedure(string Barkod, string siparisNumarasi, string malzemeKodu)
-        {
-            var barcodeResult = await _orderDal.ScanOrderBarcodeProcedure(Barkod);
+            var barcodeResult = await _orderDal.ScanOrderBarcodeProcedure(scanBarcode.barkod);
             if (Convert.ToInt32(barcodeResult?.ErrorCode) == 0 && barcodeResult != null)
             {
                 var user = await ContextUser();
 
-                var orderResult = await GetOrderBySiparisNumarasi(siparisNumarasi, user.Id);
+                var orderResult = await _orderDal.GetAsync(x => x.UserId == user.Id && x.siparisNumarasi == scanBarcode.siparisNumarasi, includes: i => i.OrderDetails);
 
                 /// Create order
                 if (orderResult == null)
                 {
                     await AddOrder(new Order()
                     {
-                        siparisNumarasi = siparisNumarasi,
+                        siparisNumarasi = scanBarcode.siparisNumarasi,
                         status = false,
                         UserId = user.Id,
                         OrderDetails = new List<OrderDetail>
                      {
                          new OrderDetail()
                          {
-                             malzemeKodu =malzemeKodu,
-                             scanResult = barcodeResult.Items.First().Kilo,
-                             siparisNumarasi = siparisNumarasi,
-                          }
+                             malzemeKodu = scanBarcode.malzemeKodu,
+                             siparisNumarasi = scanBarcode.siparisNumarasi,
+                             siparisId = scanBarcode.siparisId,
+                             Scans = new List<Scan>(){
+                             new Scan()
+                             {
+                                 result =barcodeResult.Items.First().Kilo,
+                             }
+                             }
+                         }
                       }
                     });
                 }
                 /// Update order
                 else if (orderResult != null && orderResult.status == false)
                 {
-                    var orderDetail = orderResult.OrderDetails.FirstOrDefault(x => x.malzemeKodu == malzemeKodu);
-                    if (orderDetail != null)
+                    var orderDetail = orderResult.OrderDetails.FirstOrDefault(x => x.siparisId == scanBarcode.siparisId);
+                    if (orderDetail != null) /// Bir sipariş oluşturulmuşsa yeni bir tarama ekle
                     {
                         /// Var olan order detayını güncelleme
-                        orderDetail.scanResult = barcodeResult.Items.FirstOrDefault()?.Kilo ?? "0";
+                        orderDetail.Scans.Add(new Scan { result = barcodeResult.Items.FirstOrDefault()?.Kilo ?? "0" });
                         await UpdateOrder(orderResult);
                     }
-                    else
+                    else /// Hiç sipariş oluşturulmadıysa bir sipariş oluştur. 
                     {
                         orderResult.OrderDetails.Add(new OrderDetail()
                         {
-                            siparisNumarasi = siparisNumarasi,
-                            malzemeKodu = malzemeKodu,
-                            scanResult = barcodeResult.Items.First().Kilo,
+                            siparisId = scanBarcode.siparisId,
+                            siparisNumarasi = scanBarcode.siparisNumarasi,
+                            malzemeKodu = scanBarcode.malzemeKodu,
+                            Scans = new List<Scan>(){
+                             new Scan()
+                             {
+                                 result =barcodeResult.Items.First().Kilo,
+                             }
+                        }
                         });
                         await UpdateOrder(orderResult);
                     }
@@ -103,9 +135,9 @@ namespace Business.Services.Concrete
             return await _orderDal.Update(order);
         }
 
-        public async Task<Order?> GetOrderBySiparisNumarasi(string siparisNumarasi, int userId)
+        public async Task<List<Order>?> GetAllOrdersByUserId(int userId)
         {
-            return await _orderDal.GetOrderBySiparisNumarasi(siparisNumarasi, userId);
+            return await _orderDal.GetAllAsync(x => x.UserId == userId, tracking: false, a => a.OrderDetails);
         }
 
         private async Task<UserDto> ContextUser()

@@ -53,6 +53,8 @@ namespace Business.Services.Concrete
                         /// Mac adresi başka bir hesaba bağlı değilse,
                         /// Hesapta başka bir mac adresi kayıtlı değilse ve,
                         /// Mevcut hesap var ise yeni mac adresini güncelle
+                        /// 
+                        userDto.MACADDRESS = loginRequest.MACADDRESS;
                         await UpdateUserAsync(userDto);
                     }
                     else if ((userDto != null && userDto.MACADDRESS == null && macAddress.hasMacAddress)

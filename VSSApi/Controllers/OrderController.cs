@@ -1,6 +1,7 @@
 ﻿using Business.Services.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Models.StoreProcedure;
 
 namespace VSSApi.Controllers
 {
@@ -21,16 +22,10 @@ namespace VSSApi.Controllers
             return Ok(await _orderService.GetOrderProcedure(LOGICALREF));
         }
 
-        [HttpGet("[action]")]
-        public async Task<IActionResult> GetOrderDetail([FromQuery] string SiparisNumarasi)
+        [HttpPost("[action]")]
+        public async Task<IActionResult> ScanOrderBarcode([FromBody] ScanBarcode scanBarcode)
         {
-            return Ok(await _orderService.GetOrderDetailProcedure(SiparisNumarasi));
-        }
-
-        [HttpGet("[action]")]
-        public async Task<IActionResult> ScanOrderBarcode([FromQuery] string Barkod, string siparisNumarasi, string malzemeKodu)
-        {
-            return Ok(await _orderService.ScanOrderBarcodeProcedure(Barkod, siparisNumarasi, malzemeKodu));
+            return Ok(await _orderService.ScanOrderBarcodeProcedure(scanBarcode));
         }
     }
 }

@@ -19,6 +19,7 @@ namespace DataAccess.Context
         public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<Order> Orders { get; set; }
         public virtual DbSet<OrderDetail>  OrderDetails { get; set; }
+        public virtual DbSet<Scan> Scans { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -55,13 +56,27 @@ namespace DataAccess.Context
                 entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();
+                entity.Property(e => e.siparisId).HasColumnName("siparisId");
                 entity.Property(e => e.siparisNumarasi).HasMaxLength(64).HasColumnName("siparisNumarasi");
                 entity.Property(e => e.malzemeKodu).HasMaxLength(64).HasColumnName("malzemeKodu");
-                entity.Property(e => e.scanResult).HasMaxLength(32).HasColumnName("scanResult");
 
                 entity.HasOne(e => e.Order)
                 .WithMany(e => e.OrderDetails)
                 .HasForeignKey(e => e.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<Scan>(entity =>
+            {
+                entity.ToTable("Scans");
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+                entity.Property(e => e.result).HasMaxLength(32).HasColumnName("result");
+
+                entity.HasOne(e => e.OrderDetail)
+                .WithMany(e => e.Scans)
+                .HasForeignKey(e => e.orderDetailId)
                 .OnDelete(DeleteBehavior.Restrict);
             });
         }

@@ -5,6 +5,6 @@ namespace DataAccess.Dal.Abstract
 {
     public interface IOrderDetailDal : IEntityRepository<OrderDetail>
     {
-        public Task<OrderDetail?> GetOrderDetailByOrderId(int orderId);
+        public Task<OrderDetail?> GetOrderDetailByOrderIdAndId(int orderId,string id);
     }
 }

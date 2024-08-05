@@ -6,6 +6,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Shared.Models.StoreProcedure;
 using System.Data;
+using System.Text;
 using System.Text.Json;
 
 namespace DataAccess.Dal.Concrete
@@ -20,7 +21,7 @@ namespace DataAccess.Dal.Concrete
             {
                 var connection = _context.Database.GetDbConnection();
                 await using var command = connection.CreateCommand();
-                command.CommandText = "OrderRead";
+                command.CommandText = "OrderAndOrderDetails";
                 command.CommandType = CommandType.StoredProcedure;
 
                 command.Parameters.Add(new SqlParameter("@salesmanref", SqlDbType.Int) { Value = LOGICALREF });
@@ -31,38 +32,15 @@ namespace DataAccess.Dal.Concrete
                 }
 
                 await using var reader = await command.ExecuteReaderAsync();
-                if (await reader.ReadAsync())
+                StringBuilder jsonStringBuilder = new StringBuilder();
+
+                while (await reader.ReadAsync())
                 {
-                    var resultJson = reader.GetString(0);
-                    return JsonSerializer.Deserialize<OrderResult>(resultJson);
+                    var resultJsonPart = reader.GetString(0);
+                    jsonStringBuilder.Append(resultJsonPart);
                 }
-                return null;
-            }
-        }
-
-        public async Task<OrderDetailResult?> GetOrderDetailProcedure(string SiparisNumarasi)
-        {
-            using (DataContext _context = new DataContext())
-            {
-                var connection = _context.Database.GetDbConnection();
-                await using var command = connection.CreateCommand();
-                command.CommandText = "OrderLineRead";
-                command.CommandType = CommandType.StoredProcedure;
-
-                command.Parameters.Add(new SqlParameter("@SiparisNumarasi", SqlDbType.NVarChar) { Value = SiparisNumarasi });
-
-                if (connection.State == ConnectionState.Closed)
-                {
-                    await connection.OpenAsync();
-                }
-
-                await using var reader = await command.ExecuteReaderAsync();
-                if (await reader.ReadAsync())
-                {
-                    var resultJson = reader.GetString(0);
-                    return JsonSerializer.Deserialize<OrderDetailResult>(resultJson);
-                }
-                return null;
+                reader.Close();
+                return JsonSerializer.Deserialize<OrderResult>(jsonStringBuilder.ToString());
             }
         }
 
@@ -92,11 +70,11 @@ namespace DataAccess.Dal.Concrete
             }
         }
 
-        public async Task<Order?> GetOrderBySiparisNumarasi(string SiparisNumarasi, int userId)
+        public async Task<Order?> GetOrderBySiparisNumarasi(int userId, string siparisNumarasi)
         {
             using (DataContext _context = new DataContext())
             {
-                return await _context.Set<Order>().Include(i => i.OrderDetails).FirstOrDefaultAsync(p => p.siparisNumarasi == SiparisNumarasi && p.UserId == userId);
+                return await _context.Set<Order>().Include(i => i.OrderDetails).ThenInclude(i=>i.Scans).FirstOrDefaultAsync(p => p.UserId == userId && p.siparisNumarasi == siparisNumarasi);
             }
         }
     }

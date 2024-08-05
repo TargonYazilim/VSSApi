@@ -1,12 +1,9 @@
-﻿using AutoMapper;
-using Core.DataAccess;
+﻿using Core.DataAccess;
 using DataAccess.Context;
 using DataAccess.Dal.Abstract;
-using Entities.Dtos;
 using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using Shared.Models.StoreProcedure;
-using System.Linq.Expressions;
 
 namespace DataAccess.Dal.Concrete
 {
@@ -14,7 +11,7 @@ namespace DataAccess.Dal.Concrete
     {
         
 
-        public async Task<OrderDetail?> GetOrderDetailByOrderId(int orderId)
+        public async Task<OrderDetail?> GetOrderDetailByOrderIdAndId(int orderId,string id)
         {
             using (DataContext _context = new DataContext())
             {

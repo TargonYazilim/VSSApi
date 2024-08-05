@@ -1,5 +1,4 @@
-﻿using Core.DataAccess;
-using Entities.Dtos;
+﻿using Entities.Models;
 using Shared.Models.StoreProcedure;
 
 namespace Business.Services.Abstract
@@ -7,7 +6,7 @@ namespace Business.Services.Abstract
     public interface IOrderService
     {
         Task<OrderResult?> GetOrderProcedure(int LOGICALREF);
-        Task<OrderDetailResult?> GetOrderDetailProcedure(string SiparisNumarasi);
-        Task<OrderBarcodeScanResult?> ScanOrderBarcodeProcedure(string Barkod,string siparisNumarasi, string malzemeKodu);
+        Task<OrderBarcodeScanResult?> ScanOrderBarcodeProcedure(ScanBarcode scanBarcode);
+        Task<List<Order>?> GetAllOrdersByUserId(int userId);
     }
 }
