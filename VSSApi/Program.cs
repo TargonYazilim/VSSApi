@@ -27,7 +27,7 @@ var log = new LoggerConfiguration()
         connectionString: builder.Configuration.GetConnectionString("DefaultConnection"),
         sinkOptions: new MSSqlServerSinkOptions
         {
-            TableName = "logs",
+            TableName = "VB_LOGS",
             AutoCreateSqlTable = true
         },
         columnOptions: new ColumnOptions
@@ -58,7 +58,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddDataAccess();
 builder.Services.Business();
 builder.Services.AddApi(builder.Configuration);
-
 
 
 
@@ -100,6 +99,9 @@ app.Use(async (context, next) =>
     LogContext.PushProperty("Username", username);
     await next();
 });
+
+app.Services.GenerateDb(); /// Generate db in not exists
+
 
 app.MapControllers();
 

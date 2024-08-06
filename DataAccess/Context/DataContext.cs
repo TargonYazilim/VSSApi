@@ -14,18 +14,19 @@ namespace DataAccess.Context
         public DataContext(DbContextOptions<DataContext> options)
             : base(options)
         {
+            Database.Migrate();
         }
 
         public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<Order> Orders { get; set; }
-        public virtual DbSet<OrderDetail>  OrderDetails { get; set; }
+        public virtual DbSet<OrderDetail> OrderDetails { get; set; }
         public virtual DbSet<Scan> Scans { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
             {
-                entity.ToTable("Users");
+                entity.ToTable("VB_USERS");
                 entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();
@@ -37,7 +38,7 @@ namespace DataAccess.Context
 
             modelBuilder.Entity<Order>(entity =>
             {
-                entity.ToTable("Orders");
+                entity.ToTable("VB_ORDERS");
                 entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();
@@ -52,7 +53,7 @@ namespace DataAccess.Context
 
             modelBuilder.Entity<OrderDetail>(entity =>
             {
-                entity.ToTable("OrderDetails");
+                entity.ToTable("VB_ORDERDETAILS");
                 entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();
@@ -68,7 +69,7 @@ namespace DataAccess.Context
 
             modelBuilder.Entity<Scan>(entity =>
             {
-                entity.ToTable("Scans");
+                entity.ToTable("VB_SCANS");
                 entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();
