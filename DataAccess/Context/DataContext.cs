@@ -44,6 +44,7 @@ namespace DataAccess.Context
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();
                 entity.Property(e => e.siparisNumarasi).HasMaxLength(64).HasColumnName("siparisNumarasi");
                 entity.Property(e => e.status).HasColumnName("status");
+                entity.Property(e => e.synchronized).HasColumnName("synchronized");
 
                 entity.HasOne(e => e.User)
                 .WithMany(e => e.Orders)
@@ -73,6 +74,7 @@ namespace DataAccess.Context
                 entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();
+                entity.Property(e => e.scanId).HasMaxLength(48).HasColumnName("scanId");
                 entity.Property(e => e.result).HasMaxLength(32).HasColumnName("result");
 
                 entity.HasOne(e => e.OrderDetail)

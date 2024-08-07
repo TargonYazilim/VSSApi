@@ -2,6 +2,7 @@
 {
     public class OrderProcedure
     {
+        public int Id { get; set; }
         public int siparisLogicalRef { get; set; }
         public string siparisNumarasi { get; set; }
         public string siparisTarihi { get; set; }
@@ -16,6 +17,7 @@
 
     public class OrderDetailProcedure
     {
+        public int Id { get; set; }
         public int siparisId { get; set; }
         public string malzemeKodu { get; set; }
         public string malzemeAdi { get; set; }

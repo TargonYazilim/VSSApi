@@ -1,6 +1,7 @@
 ﻿using Business.Services.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Models.CreateUpdate;
 using Shared.Models.StoreProcedure;
 
 namespace VSSApi.Controllers
@@ -23,9 +24,9 @@ namespace VSSApi.Controllers
         }
 
         [HttpPost("[action]")]
-        public async Task<IActionResult> ScanOrderBarcode([FromBody] ScanBarcode scanBarcode)
+        public async Task<IActionResult> ScanOrderBarcode([FromBody] List<CreateUpdateOrder> createUpdateOrders)
         {
-            return Ok(await _orderService.ScanOrderBarcodeProcedure(scanBarcode));
+            return Ok(await _orderService.ScanOrderBarcodeProcedure(createUpdateOrders));
         }
     }
 }

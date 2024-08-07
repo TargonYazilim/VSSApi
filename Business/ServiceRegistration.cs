@@ -11,6 +11,7 @@ namespace Business
         {
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IOrderService, OrderService>();
+            services.AddScoped<IBarcodeService, BarcodeService>();
         }
     }
 }

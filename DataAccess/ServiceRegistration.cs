@@ -12,6 +12,7 @@ namespace DataAccess
         {
             services.AddScoped<IUserDal, UserDal>();
             services.AddScoped<IOrderDal, OrderDal>();
+            services.AddScoped<IBarcodeDal, BarcodeDal>();
 
             services.AddDbContext<DataContext>(opt => opt.UseSqlServer(Configuration.ConnectionString));
         }
