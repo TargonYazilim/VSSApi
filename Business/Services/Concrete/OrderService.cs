@@ -62,7 +62,7 @@ namespace Business.Services.Concrete
             foreach (var createUpdateOrder in createUpdateOrders)
             {
 
-                var orderResult = await _orderDal.GetAsync(x => x.UserId == user.Id && (x.siparisNumarasi == createUpdateOrder.siparisNumarasi || x.Id == createUpdateOrder.Id), includes: i => i.OrderDetails);
+                var orderResult = await _orderDal.GetAsync(x => x.UserId == user.Id && (x.siparisNumarasi == createUpdateOrder.siparisNumarasi || (createUpdateOrder.Id != null && x.Id == createUpdateOrder.Id)), includes: i => i.OrderDetails);
 
                 /// Create order
                 if (orderResult == null)
@@ -93,11 +93,11 @@ namespace Business.Services.Concrete
                     malzemeKodu = od.malzemeKodu,
                     siparisNumarasi = createUpdateOrder.siparisNumarasi,
                     siparisId = od.siparisId,
-                    Scans = od.scans.Select(sc => new Scan
+                    Scans = od.scans != null ? od.scans.Select(sc => new Scan
                     {
                         result = sc.result,
                         scanId = sc.scanId
-                    }).ToList()
+                    }).ToList() : null
                 }).ToList()
             };
             await AddOrder(order);
@@ -111,13 +111,16 @@ namespace Business.Services.Concrete
 
                 if (orderDetailResult != null)
                 {
-                    foreach (var scan in orderDetail.scans)
+                    if (orderDetail.scans != null)
                     {
-                        orderDetailResult.Scans.Add(new Scan
+                        foreach (var scan in orderDetail.scans)
                         {
-                            result = scan.result,
-                            scanId = scan.scanId
-                        });
+                            orderDetailResult.Scans.Add(new Scan
+                            {
+                                result = scan.result,
+                                scanId = scan.scanId
+                            });
+                        }
                     }
                 }
                 else
@@ -127,11 +130,11 @@ namespace Business.Services.Concrete
                         siparisId = orderDetail.siparisId,
                         siparisNumarasi = createUpdateOrder.siparisNumarasi,
                         malzemeKodu = orderDetail.malzemeKodu,
-                        Scans = orderDetail.scans.Select(sc => new Scan
+                        Scans = orderDetail.scans != null ? orderDetail.scans.Select(sc => new Scan
                         {
                             result = sc.result,
                             scanId = sc.scanId
-                        }).ToList()
+                        }).ToList() : null
                     });
                 }
             }

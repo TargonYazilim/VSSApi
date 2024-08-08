@@ -13,6 +13,6 @@ namespace Entities.Models
         public string malzemeKodu { get; set; }
         public int OrderId { get; set; }
         public Order Order { get; set; }
-        public ICollection<Scan> Scans { get; set; }
+        public ICollection<Scan>? Scans { get; set; }
     }
 }
