@@ -41,7 +41,7 @@ namespace Core.DataAccess
 
                 deletedEntity.State = EntityState.Deleted;
 
-                return await context.SaveChangesAsync() > 1 ? true : false;
+                return await context.SaveChangesAsync() > 0 ? true : false;
             }
         }
 
