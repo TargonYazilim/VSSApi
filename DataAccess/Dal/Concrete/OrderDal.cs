@@ -1,9 +1,11 @@
 ﻿using Core.DataAccess;
 using DataAccess.Context;
 using DataAccess.Dal.Abstract;
+using Entities.Concrete;
 using Entities.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Shared.Models.CreateUpdate;
 using Shared.Models.StoreProcedure;
 using System.Data;
 using System.Text;
@@ -74,7 +76,15 @@ namespace DataAccess.Dal.Concrete
         {
             using (DataContext _context = new DataContext())
             {
-                return await _context.Set<Order>().Include(i => i.OrderDetails).ThenInclude(i=>i.Scans).FirstOrDefaultAsync(p => p.UserId == userId && p.siparisNumarasi == siparisNumarasi);
+                return await _context.Set<Order>().Include(i => i.OrderDetails).ThenInclude(i => i.Scans).FirstOrDefaultAsync(p => p.UserId == userId && p.siparisNumarasi == siparisNumarasi);
+            }
+        }
+
+        public async Task<Order?> GetOrderBySiparisNumarasiAndOrderId(int userId, string siparisNumarasi, int? orderId)
+        {
+            using (DataContext _context = new DataContext())
+            {
+                return await _context.Set<Order>().Include(i => i.OrderDetails).ThenInclude(i => i.Scans).FirstOrDefaultAsync(x => x.UserId == userId && (x.siparisNumarasi == siparisNumarasi || (orderId != null && x.Id == orderId)));
             }
         }
     }

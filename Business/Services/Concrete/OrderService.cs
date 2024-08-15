@@ -1,11 +1,13 @@
 ﻿using Business.Services.Abstract;
 using DataAccess.Dal.Abstract;
-using Entities.Concrete;
 using Entities.Dtos;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.IdentityModel.Tokens;
 using Shared.Models.CreateUpdate;
 using Shared.Models.StoreProcedure;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace Business.Services.Concrete
 {
@@ -44,7 +46,8 @@ namespace Business.Services.Concrete
                                 orderFromProcedure.Id = hasOrder.Id;
                                 orderFromProcedure.scans = hasOrder.Scans.Select(scan => new ScanProcedure
                                 {
-                                    scanId = scan.Id,
+                                    Id = scan.Id,
+                                    scanId = scan.scanId,
                                     result = scan.result
                                 }).ToList();
                             }
@@ -55,26 +58,26 @@ namespace Business.Services.Concrete
             return ordersFromProcedure;
         }
 
-        public async Task<List<string>?> ScanOrderBarcodeProcedure(List<CreateUpdateOrder> createUpdateOrders)
+        public async Task<List<ScanBarcodeResult>?> ScanOrderBarcodeProcedure(List<CreateUpdateOrder> createUpdateOrders)
         {
             var user = await ContextUser();
-            List<string> synchronizedOrders = new List<string>();
+            List<ScanBarcodeResult> synchronizedOrders = new List<ScanBarcodeResult>();
             foreach (var createUpdateOrder in createUpdateOrders)
             {
 
-                var orderResult = await _orderDal.GetAsync(x => x.UserId == user.Id && (x.siparisNumarasi == createUpdateOrder.siparisNumarasi || (createUpdateOrder.Id != null && x.Id == createUpdateOrder.Id)), includes: i => i.OrderDetails);
+                var orderResult = await _orderDal.GetOrderBySiparisNumarasiAndOrderId(user.Id, createUpdateOrder.siparisNumarasi, createUpdateOrder.Id);
 
                 /// Create order
                 if (orderResult == null)
                 {
                     await CreateOrder(createUpdateOrder, user.Id);
-                    synchronizedOrders.Add(createUpdateOrder.siparisNumarasi);
+                    synchronizedOrders.Add(new ScanBarcodeResult { siparisNumarasi = createUpdateOrder.siparisNumarasi });
                 }
                 /// Update order
                 else if (orderResult != null && orderResult.status == false)
                 {
                     await UpdateOrderWithDetails(orderResult, createUpdateOrder);
-                    synchronizedOrders.Add(createUpdateOrder.siparisNumarasi);
+                    synchronizedOrders.Add(new ScanBarcodeResult { siparisNumarasi = createUpdateOrder.siparisNumarasi });
                 }
             }
             return synchronizedOrders;
@@ -82,24 +85,41 @@ namespace Business.Services.Concrete
 
         private async Task CreateOrder(CreateUpdateOrder createUpdateOrder, int userId)
         {
+            if (createUpdateOrder.orderDetails == null || !createUpdateOrder.orderDetails.Any())
+            {
+                return;
+            }
+
+            var orderDetails = createUpdateOrder.orderDetails
+            .Where(od => od.scans != null && od.scans.Any())
+            .Select(od => new OrderDetail
+            {
+                malzemeKodu = od.malzemeKodu,
+                siparisNumarasi = createUpdateOrder.siparisNumarasi,
+                siparisId = od.siparisId,
+                Scans = od.scans!.Select(sc => new Scan
+                {
+                    result = sc.result,
+                    scanId = sc.scanId
+                }).ToList()
+            }).ToList();
+
+
+            if (!orderDetails.Any())
+            {
+                return;
+            }
+
+
             var order = new Order
             {
                 siparisNumarasi = createUpdateOrder.siparisNumarasi,
                 status = false,
                 UserId = userId,
                 synchronized = true,
-                OrderDetails = createUpdateOrder.orderDetails.Select(od => new OrderDetail
-                {
-                    malzemeKodu = od.malzemeKodu,
-                    siparisNumarasi = createUpdateOrder.siparisNumarasi,
-                    siparisId = od.siparisId,
-                    Scans = od.scans != null ? od.scans.Select(sc => new Scan
-                    {
-                        result = sc.result,
-                        scanId = sc.scanId
-                    }).ToList() : null
-                }).ToList()
+                OrderDetails = orderDetails
             };
+
             await AddOrder(order);
         }
 
@@ -109,37 +129,43 @@ namespace Business.Services.Concrete
             {
                 var orderDetailResult = order.OrderDetails.FirstOrDefault(x => x.siparisId == orderDetail.siparisId);
 
-                if (orderDetailResult != null)
+                if (orderDetailResult != null && orderDetail.scans != null && orderDetail.scans.Any())
                 {
-                    if (orderDetail.scans != null)
+                    foreach (var scan in orderDetail.scans)
                     {
-                        foreach (var scan in orderDetail.scans)
+                        var scanExists = orderDetailResult.Scans?.FirstOrDefault(x => x.scanId == scan.scanId);
+                        if (scanExists == null)
                         {
-                            orderDetailResult.Scans.Add(new Scan
+                            orderDetailResult.Scans!.Add(new Scan
                             {
                                 result = scan.result,
                                 scanId = scan.scanId
                             });
+                            await UpdateOrder(order); // Burada her yeni scan için UpdateOrder çağrısı yapılıyor
                         }
                     }
                 }
                 else
                 {
-                    order.OrderDetails.Add(new OrderDetail
+                    if (orderDetail.scans != null && orderDetail.scans.Any())
                     {
-                        siparisId = orderDetail.siparisId,
-                        siparisNumarasi = createUpdateOrder.siparisNumarasi,
-                        malzemeKodu = orderDetail.malzemeKodu,
-                        Scans = orderDetail.scans != null ? orderDetail.scans.Select(sc => new Scan
+                        order.OrderDetails.Add(new OrderDetail
                         {
-                            result = sc.result,
-                            scanId = sc.scanId
-                        }).ToList() : null
-                    });
+                            siparisId = orderDetail.siparisId,
+                            siparisNumarasi = createUpdateOrder.siparisNumarasi,
+                            malzemeKodu = orderDetail.malzemeKodu,
+                            Scans = orderDetail.scans.Select(sc => new Scan
+                            {
+                                result = sc.result,
+                                scanId = sc.scanId
+                            }).ToList()
+                        });
+                        await UpdateOrder(order);
+                    }
                 }
             }
-            await UpdateOrder(order);
         }
+
 
         public async Task<int?> AddOrder(Order order)
         {
