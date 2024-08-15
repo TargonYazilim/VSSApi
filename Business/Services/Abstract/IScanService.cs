@@ -4,6 +4,6 @@ namespace Business.Services.Abstract
 {
     public interface IScanService
     {
-        public Task<bool> DeleteScan(int scanId);
+        public Task<bool> DeleteScan(string scanId);
     }
 }

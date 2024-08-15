@@ -18,7 +18,7 @@ namespace VSSApi.Controllers
         }
 
         [HttpDelete("[action]")]
-        public async Task<IActionResult> DeleteScan([FromQuery] int scanId)
+        public async Task<IActionResult> DeleteScan([FromQuery] string scanId)
         {
             var response = await _scanService.DeleteScan(scanId);
             return Ok(response);

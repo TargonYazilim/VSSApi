@@ -13,9 +13,9 @@ namespace Business.Services.Concrete
             _scanDal = scanDal;
         }
 
-        public async Task<bool> DeleteScan(int scanId)
+        public async Task<bool> DeleteScan(string scanId)
         {
-            Scan? scan = await _scanDal.GetAsync(x => x.Id == scanId);
+            Scan? scan = await _scanDal.GetAsync(x => x.scanId == scanId);
             if (scan != null)
             {
                 return await _scanDal.Delete(scan);
