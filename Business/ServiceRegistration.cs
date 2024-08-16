@@ -12,6 +12,7 @@ namespace Business
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IBarcodeService, BarcodeService>();
             services.AddScoped<IScanService, ScanService>();
+            services.AddScoped<IIrsaliyeService, IrsaliyeService>();
         }
     }
 }
