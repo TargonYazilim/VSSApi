@@ -3,11 +3,8 @@ using DataAccess.Dal.Abstract;
 using Entities.Dtos;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
-using Microsoft.IdentityModel.Tokens;
 using Shared.Models.CreateUpdate;
 using Shared.Models.StoreProcedure;
-using System.Linq;
-using System.Linq.Expressions;
 
 namespace Business.Services.Concrete
 {
@@ -16,11 +13,16 @@ namespace Business.Services.Concrete
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IOrderDal _orderDal;
         private readonly IUserService _userService;
-        public OrderService(IOrderDal orderDal, IHttpContextAccessor httpContextAccessor, IUserService userService)
+        private readonly IScanService _scanService;
+        private readonly IOrderDetailService _orderDetailService;
+
+        public OrderService(IOrderDal orderDal, IHttpContextAccessor httpContextAccessor, IUserService userService, IScanService scanService, IOrderDetailService orderDetailService)
         {
             _orderDal = orderDal;
             _httpContextAccessor = httpContextAccessor;
             _userService = userService;
+            _scanService = scanService;
+            _orderDetailService = orderDetailService;
         }
         public async Task<OrderResult?> GetOrderProcedure(int LOGICALREF)
         {
@@ -39,12 +41,12 @@ namespace Business.Services.Concrete
                         var orderFromDb = await _orderDal.GetOrderBySiparisNumarasi(user.Id, order.siparisNumarasi);
                         if (orderFromDb != null)
                         {
-                            var hasOrder = orderFromDb.OrderDetails.FirstOrDefault(x => x.siparisId == orderFromProcedure.siparisId);
-                            if (hasOrder != null && hasOrder.Scans != null)
+                            var hasOrderDetail = orderFromDb.OrderDetails.FirstOrDefault(x => x.siparisId == orderFromProcedure.siparisId);
+                            if (hasOrderDetail != null && hasOrderDetail.Scans != null)
                             {
                                 order.Id = orderFromDb.Id;
-                                orderFromProcedure.Id = hasOrder.Id;
-                                orderFromProcedure.scans = hasOrder.Scans.Select(scan => new ScanProcedure
+                                orderFromProcedure.Id = hasOrderDetail.Id;
+                                orderFromProcedure.scans = hasOrderDetail.Scans.Select(scan => new ScanProcedure
                                 {
                                     Id = scan.Id,
                                     scanId = scan.scanId,
@@ -64,6 +66,7 @@ namespace Business.Services.Concrete
             List<ScanBarcodeResult> synchronizedOrders = new List<ScanBarcodeResult>();
             foreach (var createUpdateOrder in createUpdateOrders)
             {
+                await CheckRemovedScans(createUpdateOrder);
 
                 var orderResult = await _orderDal.GetOrderBySiparisNumarasiAndOrderId(user.Id, createUpdateOrder.siparisNumarasi, createUpdateOrder.Id);
 
@@ -125,6 +128,7 @@ namespace Business.Services.Concrete
 
         private async Task UpdateOrderWithDetails(Order order, CreateUpdateOrder createUpdateOrder)
         {
+
             foreach (var orderDetail in createUpdateOrder.orderDetails)
             {
                 var orderDetailResult = order.OrderDetails.FirstOrDefault(x => x.siparisId == orderDetail.siparisId);
@@ -134,6 +138,7 @@ namespace Business.Services.Concrete
                     foreach (var scan in orderDetail.scans)
                     {
                         var scanExists = orderDetailResult.Scans?.FirstOrDefault(x => x.scanId == scan.scanId);
+
                         if (scanExists == null)
                         {
                             orderDetailResult.Scans!.Add(new Scan
@@ -161,11 +166,42 @@ namespace Business.Services.Concrete
                             }).ToList()
                         });
                         await UpdateOrder(order);
+
                     }
                 }
             }
         }
 
+        private async Task CheckRemovedScans(CreateUpdateOrder createUpdateOrder)
+        {
+            /// Id varsa bu sipariş daha önce oluşturulmuştur.
+            if (createUpdateOrder.Id != null)
+            {
+                var user = await ContextUser();
+                var order = await _orderDal.GetOrderBySiparisNumarasi(user.Id, createUpdateOrder.siparisNumarasi);
+
+                if (order?.OrderDetails == null) return;
+                foreach (var orderDetail in order.OrderDetails)
+                {
+                    foreach (var createUpdateOrderDetail in createUpdateOrder.orderDetails)
+                    {
+                        if (orderDetail.siparisId == createUpdateOrderDetail.siparisId)
+                        {
+                            if (orderDetail?.Scans == null) return;
+                            foreach (var scan in orderDetail.Scans)
+                            {
+                                var existsScanInClient = createUpdateOrderDetail.scans?.Any(x => x.scanId == scan.scanId) ?? false;
+                                if (!existsScanInClient)
+                                {
+                                    await _scanService.DeleteScan(scan.scanId);
+                                }
+                            }
+
+                        }
+                    }
+                }
+            }
+        }
 
         public async Task<int?> AddOrder(Order order)
         {
