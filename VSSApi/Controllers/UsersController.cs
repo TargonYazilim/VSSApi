@@ -3,9 +3,11 @@ using Entities.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Models.Login;
+using VSSApi.Authentication;
 
 namespace VSSApi.Controllers
 {
+    [ApiKeyAuthFilter]
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]

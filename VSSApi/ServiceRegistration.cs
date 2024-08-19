@@ -62,8 +62,35 @@ namespace VSSApi
 
                 gen.AddSecurityDefinition(securityScheme.Reference.Id, securityScheme);
                 gen.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+                {
                     {securityScheme, Array.Empty<string>()}
+                });
+
+                gen.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+                {
+                    Description = "API Key must appear in the header",
+                    Type = SecuritySchemeType.ApiKey,
+                    Name = "X-Api-Key",
+                    In = ParameterLocation.Header,
+                    Scheme = "ApiKeyScheme"
+                });
+
+                gen.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "ApiKey"
+                            },
+                            Scheme = "ApiKeyScheme",
+                            Name = "ApiKey",
+                            In = ParameterLocation.Header,
+                        },
+                        new List<string>()
+                    }
                 });
 
             });

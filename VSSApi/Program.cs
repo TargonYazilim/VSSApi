@@ -8,6 +8,7 @@ using Serilog.Sinks.MSSqlServer;
 using System.Data;
 using VSSApi.Extension;
 using Serilog.Context;
+using VSSApi.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,8 +51,8 @@ builder.Services.AddHttpContextAccessor();//Client'tan gelen request neticesinde
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddControllers(/*x=>x.Filters.Add<ApiKeyAuthFilter>()*/);/// Api Key filter yazarak controllera eriþirken api key'in olmasýný zorunlu kýlýyoruz.
+
 builder.Services.AddEndpointsApiExplorer();
 
 
@@ -59,7 +60,7 @@ builder.Services.AddDataAccess();
 builder.Services.Business();
 builder.Services.AddApi(builder.Configuration);
 
-
+builder.Services.AddScoped<ApiKeyAuthFilter>();
 
 var app = builder.Build();
 
@@ -89,6 +90,8 @@ app.UseSerilogRequestLogging();
 app.UseCors();
 
 app.UseHttpsRedirection();
+
+//app.UseMiddleware<ApiKeyAuthMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
