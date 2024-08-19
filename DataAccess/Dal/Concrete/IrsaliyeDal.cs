@@ -17,7 +17,7 @@ namespace DataAccess.Dal.Concrete
             {
                 var connection = _context.Database.GetDbConnection();
                 await using var command = connection.CreateCommand();
-                command.CommandText = "GetInvoiceByOrderCode";
+                command.CommandText = "VB_GetInvoiceByOrderCode";
                 command.CommandType = CommandType.StoredProcedure;
 
                 command.Parameters.Add(new SqlParameter("@SiparisKodu", SqlDbType.NVarChar) { Value = siparisNumarasi });

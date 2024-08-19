@@ -45,7 +45,7 @@ namespace DataAccess.Dal.Concrete
             {
                 var connection = _context.Database.GetDbConnection();
                 await using var command = connection.CreateCommand();
-                command.CommandText = "UserRead";
+                command.CommandText = "VB_UserRead";
                 command.CommandType = CommandType.StoredProcedure;
 
                 command.Parameters.Add(new SqlParameter("@username", SqlDbType.NVarChar, 50) { Value = user.username });

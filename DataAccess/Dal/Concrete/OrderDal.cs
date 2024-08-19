@@ -23,7 +23,7 @@ namespace DataAccess.Dal.Concrete
             {
                 var connection = _context.Database.GetDbConnection();
                 await using var command = connection.CreateCommand();
-                command.CommandText = "OrderAndOrderDetails";
+                command.CommandText = "VB_OrderAndOrderDetails";
                 command.CommandType = CommandType.StoredProcedure;
 
                 command.Parameters.Add(new SqlParameter("@salesmanref", SqlDbType.Int) { Value = LOGICALREF });

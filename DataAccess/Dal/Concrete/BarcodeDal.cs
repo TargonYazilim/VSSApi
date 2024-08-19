@@ -16,7 +16,7 @@ namespace DataAccess.Dal.Concrete
             {
                 var connection = _context.Database.GetDbConnection();
                 await using var command = connection.CreateCommand();
-                command.CommandText = "GetAllItemsWithBarcodeAndUnit";
+                command.CommandText = "VB_GetAllItemsWithBarcodeAndUnit";
                 command.CommandType = CommandType.StoredProcedure;
 
                 if (connection.State == ConnectionState.Closed)
