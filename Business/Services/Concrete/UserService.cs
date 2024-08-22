@@ -40,7 +40,13 @@ namespace Business.Services.Concrete
                     if (userDto == null && !macAddress.hasMacAddress)
                     {
                         /// Kullanıcı yok ise ve mac adresi de başka yerde yok ise kullanıcıyı kayıt et.
-                        userDto = new UserDto() { LOGICALREF = result.LOGICALREF, MACADDRESS = loginRequest.MACADDRESS, role = Roles.user, username = loginRequest.username };
+                        userDto = new UserDto() 
+                        { 
+                            LOGICALREF = result.LOGICALREF, 
+                            MACADDRESS = loginRequest.MACADDRESS, 
+                            role = Roles.user, 
+                            username = loginRequest.username
+                        };
                         await AddUserAsync(userDto);
                     }
                     else if (userDto == null && macAddress.hasMacAddress)
@@ -66,7 +72,7 @@ namespace Business.Services.Concrete
 
                     var token = CreateToken(userDto);
                     return new LoginResult()
-                    { Error = "0", Result = "Giriş başarılı", Token = token, Id = result.LOGICALREF };
+                    { Error = "0", Result = "Giriş başarılı", Token = token, Id = result.LOGICALREF,AddressInfo = result.AddressInfo };
                 }
             }
             return null;

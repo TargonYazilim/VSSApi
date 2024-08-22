@@ -103,7 +103,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.Services.GenerateDb(); /// Generate db in not exists
+app.Services.GenerateDb(); /// Generate db if not exists
 
 
 app.MapControllers();
