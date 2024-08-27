@@ -30,6 +30,7 @@
     {
         public int ErrorCode { get; set; }
         public string Result { get; set; }
+        public DateTime date { get; set; } = DateTime.Now.Date;
         public List<OrderProcedure> orders { get; set; }
     }
 

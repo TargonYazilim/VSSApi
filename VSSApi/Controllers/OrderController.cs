@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Models.CreateUpdate;
-using Shared.Models.StoreProcedure;
 
 namespace VSSApi.Controllers
 {

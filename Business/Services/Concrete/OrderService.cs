@@ -3,6 +3,7 @@ using DataAccess.Dal.Abstract;
 using Entities.Dtos;
 using Entities.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.IdentityModel.Tokens;
 using Shared.Models.CreateUpdate;
 using Shared.Models.StoreProcedure;
 
@@ -14,15 +15,13 @@ namespace Business.Services.Concrete
         private readonly IOrderDal _orderDal;
         private readonly IUserService _userService;
         private readonly IScanService _scanService;
-        private readonly IOrderDetailService _orderDetailService;
 
-        public OrderService(IOrderDal orderDal, IHttpContextAccessor httpContextAccessor, IUserService userService, IScanService scanService, IOrderDetailService orderDetailService)
+        public OrderService(IOrderDal orderDal, IHttpContextAccessor httpContextAccessor, IUserService userService, IScanService scanService)
         {
             _orderDal = orderDal;
             _httpContextAccessor = httpContextAccessor;
             _userService = userService;
             _scanService = scanService;
-            _orderDetailService = orderDetailService;
         }
         public async Task<OrderResult?> GetOrderProcedure(int LOGICALREF)
         {
@@ -31,27 +30,29 @@ namespace Business.Services.Concrete
             var ordersFromProcedure = await _orderDal.GetOrderProcedure(LOGICALREF);
             /// Procedure'dan order detaylarını çekerken eğer ara tabloda scanResult mevcut ise o veriyi 
             /// OrderFromProcedure'e implement et.
-            if (ordersFromProcedure != null)
+            if (ordersFromProcedure != null && ordersFromProcedure.orders != null)
             {
                 foreach (var order in ordersFromProcedure.orders)
                 {
-                    foreach (var orderFromProcedure in order.orderDetails)
+                    if (order.orderDetails != null)
                     {
-
-                        var orderFromDb = await _orderDal.GetOrderBySiparisNumarasi(user.Id, order.siparisNumarasi);
-                        if (orderFromDb != null)
+                        foreach (var orderFromProcedure in order.orderDetails)
                         {
-                            var hasOrderDetail = orderFromDb.OrderDetails.FirstOrDefault(x => x.siparisId == orderFromProcedure.siparisId);
-                            if (hasOrderDetail != null && hasOrderDetail.Scans != null)
+                            var orderFromDb = await _orderDal.GetOrderBySiparisNumarasi(user.Id, order.siparisNumarasi);
+                            if (orderFromDb != null)
                             {
-                                order.Id = orderFromDb.Id;
-                                orderFromProcedure.Id = hasOrderDetail.Id;
-                                orderFromProcedure.scans = hasOrderDetail.Scans.Select(scan => new ScanProcedure
+                                var hasOrderDetail = orderFromDb.OrderDetails.FirstOrDefault(x => x.siparisId == orderFromProcedure.siparisId);
+                                if (hasOrderDetail != null && hasOrderDetail.Scans != null)
                                 {
-                                    Id = scan.Id,
-                                    scanId = scan.scanId,
-                                    result = scan.result
-                                }).ToList();
+                                    order.Id = orderFromDb.Id;
+                                    orderFromProcedure.Id = hasOrderDetail.Id;
+                                    orderFromProcedure.scans = hasOrderDetail.Scans.Select(scan => new ScanProcedure
+                                    {
+                                        Id = scan.Id,
+                                        scanId = scan.scanId,
+                                        result = scan.result
+                                    }).ToList();
+                                }
                             }
                         }
                     }
@@ -180,7 +181,7 @@ namespace Business.Services.Concrete
                 var user = await ContextUser();
                 var order = await _orderDal.GetOrderBySiparisNumarasi(user.Id, createUpdateOrder.siparisNumarasi);
 
-                if (order?.OrderDetails == null) return;
+                if (order?.OrderDetails == null || order.status == true) return;
                 foreach (var orderDetail in order.OrderDetails)
                 {
                     foreach (var createUpdateOrderDetail in createUpdateOrder.orderDetails)

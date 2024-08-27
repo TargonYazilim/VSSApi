@@ -50,6 +50,8 @@ namespace DataAccess.Dal.Concrete
 
                 command.Parameters.Add(new SqlParameter("@username", SqlDbType.NVarChar, 50) { Value = user.username });
                 command.Parameters.Add(new SqlParameter("@password", SqlDbType.NVarChar, 50) { Value = user.password });
+                command.Parameters.Add(new SqlParameter("@firmNr", SqlDbType.Int) { Value = user.companyNo });
+                command.Parameters.Add(new SqlParameter("@periodNr", SqlDbType.Int) { Value = user.periodNo });
 
                 if (connection.State == ConnectionState.Closed)
                 {

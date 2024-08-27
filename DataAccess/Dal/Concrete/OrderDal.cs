@@ -23,10 +23,14 @@ namespace DataAccess.Dal.Concrete
             {
                 var connection = _context.Database.GetDbConnection();
                 await using var command = connection.CreateCommand();
-                command.CommandText = "VB_OrderAndOrderDetails";
+                command.CommandText = "VB_OrdersAndDetails_V01";
                 command.CommandType = CommandType.StoredProcedure;
-
+                
+                //TODO: tarihi parametreye ekle
+                var date = DateTime.Now.ToString("yyyy-MM-dd");
+                
                 command.Parameters.Add(new SqlParameter("@salesmanref", SqlDbType.Int) { Value = LOGICALREF });
+                command.Parameters.Add(new SqlParameter("@duedate", SqlDbType.NVarChar) { Value = "2024-07-18" });
 
                 if (connection.State == ConnectionState.Closed)
                 {
@@ -52,7 +56,7 @@ namespace DataAccess.Dal.Concrete
             {
                 var connection = _context.Database.GetDbConnection();
                 await using var command = connection.CreateCommand();
-                command.CommandText = "GetItemByBarcode";
+                command.CommandText = "VB_GetItemByBarcode";
                 command.CommandType = CommandType.StoredProcedure;
 
                 command.Parameters.Add(new SqlParameter("@Barkod", SqlDbType.NVarChar) { Value = Barkod });

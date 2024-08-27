@@ -31,7 +31,7 @@ namespace Business.Services.Concrete
             if (result != null)
             {
                 int.TryParse(result.Error, out int error);
-                if (error == 1) return new LoginResult() { Error = result.Error, Result = result.Result, Token = null };
+                if (error != 0 || result.Error.Trim() != "") return new LoginResult() { Error = result.Error, Result = result.Result, Token = null };
                 else
                 {
                     /// Db'den kullanıcı adına göre veriyi getir.
@@ -40,11 +40,11 @@ namespace Business.Services.Concrete
                     if (userDto == null && !macAddress.hasMacAddress)
                     {
                         /// Kullanıcı yok ise ve mac adresi de başka yerde yok ise kullanıcıyı kayıt et.
-                        userDto = new UserDto() 
-                        { 
-                            LOGICALREF = result.LOGICALREF, 
-                            MACADDRESS = loginRequest.MACADDRESS, 
-                            role = Roles.user, 
+                        userDto = new UserDto()
+                        {
+                            LOGICALREF = result.LOGICALREF,
+                            MACADDRESS = loginRequest.MACADDRESS,
+                            role = Roles.user,
                             username = loginRequest.username
                         };
                         await AddUserAsync(userDto);
@@ -72,7 +72,14 @@ namespace Business.Services.Concrete
 
                     var token = CreateToken(userDto);
                     return new LoginResult()
-                    { Error = "0", Result = "Giriş başarılı", Token = token, Id = result.LOGICALREF,AddressInfo = result.AddressInfo };
+                    {
+                        Error = "0",
+                        Result = "Giriş başarılı",
+                        Token = token,
+                        Id = result.LOGICALREF,
+                        AddressInfo = result.AddressInfo,
+                        UserInfo = result.UserInfo,
+                    };
                 }
             }
             return null;
